@@ -8,11 +8,14 @@ from .models import Profile
 
 @login_required
 def dashboard(request):
-    return render(request,
-                  'account/dashboard.html',
-                  {'section': 'dashboard'})
+    return render(request,'account/dashboard.html',)
 
 
 @login_required
 def edit_profile(request):
     return render(request, 'account/edit.html')
+
+
+@login_required
+def charts(request):
+    return render(request, 'account/charts.html')
