@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -115,6 +116,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/mediafiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'staticfiles'),
                     ]
 
+IMPORT_EXPORT_USE_TRANSACTIONS = True
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'

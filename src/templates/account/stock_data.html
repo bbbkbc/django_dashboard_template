@@ -1,0 +1,59 @@
+{% extends 'account/dashboard.html' %}
+{% block title %}Stock data upload{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-left">
+    <div class="col-md-6 mb-1">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4 class="card-title">Below you can import stock list</h4>
+                <form method="post" enctype="multipart/form-data" action="#" class="mb-2">
+                    {% csrf_token %}
+                    <input type="file" name="importData">
+                    <button class="btn btn-primary mb-1" type="submit">Import</button>
+                    <a href="#" class="btn btn-primary mb-1 ml-2">Export</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-left">
+    <div class="col-md-6 mb-1">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4 class="card-title">Below you can import transaction history</h4>
+                <form method="post" enctype="multipart/form-data" action="#" class="mb-2">
+                    {% csrf_token %}
+                    <input type="file" class="bg-light small" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-primary mb-1" type="submit">Import</button>
+                    <a href="#" class="btn btn-primary mb-1 ml-2">Export</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+  <!-- Circle Buttons -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Import stock list</h6>
+                </div>
+                <div class="card-body">
+                  <p>Here you can import or export stock list</p>
+                  <form method="post" enctype="multipart/form-data" action="#" class="mb-2">
+                    {% csrf_token %}
+                    <input type="file" class="bg-light small" placeholder="Search" aria-label="Search">
+                      <a href="#" class="btn btn-primary btn-icon-split">
+                          <span class="icon text-white-50">
+                              <i class="fas fa-flag"></i>
+                          </span>
+                          <span class="text">Import</span>
+                      </a>
+                    <button class="btn btn-primary mb-1" type="submit">Import</button>
+                    <a href="#" class="btn btn-primary mb-1 ml-2">Export</a>
+                  </form>
+                </div>
+              </div>
+
+{% endblock %}
