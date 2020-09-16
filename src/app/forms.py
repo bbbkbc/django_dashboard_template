@@ -7,13 +7,7 @@ class LoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
 
 
-# class UserEditForm(forms.ModelForm):
-#     class Meta:
-#         model = User
-#         fields = ('first_name', 'last_name', 'email')
-
-#
-# class ProfileEditForm(forms.ModelForm):
-#     class Meta:
-#         model = Profile
-#         fields = 'date_of_birth'
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['first_name', 'last_name', 'phone_number', 'email']

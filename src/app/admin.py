@@ -1,12 +1,11 @@
 from django.contrib import admin
 from .models import Profile, Stock, TradeHistory
-from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'date_of_birth']
+    list_display = ['user', 'first_name', 'last_name', 'phone_number', 'email']
 
 
 @admin.register(Stock)
@@ -15,17 +14,5 @@ class StockAdmin(ImportExportModelAdmin):
 
 
 @admin.register(TradeHistory)
-class TradeAdmin(ImportExportModelAdmin):
+class TradeHistoryAdmin(ImportExportModelAdmin):
     pass
-
-
-class StockResource(resources.ModelResource):
-
-    class Meta:
-        model = Stock
-
-
-class TradeHistoryResource(resources.ModelResource):
-
-    class Meta:
-        model = TradeHistory
