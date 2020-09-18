@@ -40,3 +40,17 @@ class TradeHistory(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class StockPrice(models.Model):
+    id = models.AutoField(primary_key=True)
+    stock = models.ForeignKey(Stock, null=True, on_delete=models.SET_NULL)
+    date = models.DateField()
+    open = models.FloatField()
+    high = models.FloatField()
+    low = models.FloatField()
+    close = models.FloatField()
+    volume = models.IntegerField()
+
+    def __str__(self):
+        return str(self.stock)

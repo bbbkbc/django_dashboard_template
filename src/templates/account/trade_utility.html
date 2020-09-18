@@ -8,9 +8,9 @@
         <h6 class="m-0 font-weight-bold text-primary">Import/Export Trades</h6>
     </div>
     <div class="card-body">
-        <form method="post" enctype="multipart/form-data" action="#" class="mb-2">
+        <form method="post" enctype="multipart/form-data" action="{% url 'trades' %}" class="mb-2">
             {% csrf_token %}
-            <input type="file" class="bg-light small mr-4 mb-4" placeholder="Search" aria-label="Search">
+            <input type="file" class="bg-light small mr-4 mb-4" name="importData">
             <button class="btn btn-primary mb-1" type="submit">Import</button>
             <a href="{% url 'export_data' %}" class="btn btn-primary mb-1 ml-2">Export</a>
         </form>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Stock, TradeHistory
+from .models import Profile, Stock, TradeHistory, StockPrice
 from import_export.admin import ImportExportModelAdmin
 
 
@@ -15,4 +15,9 @@ class StockAdmin(ImportExportModelAdmin):
 
 @admin.register(TradeHistory)
 class TradeHistoryAdmin(ImportExportModelAdmin):
+    pass
+
+
+@admin.register(StockPrice)
+class StockPrice(ImportExportModelAdmin):
     pass
