@@ -5,10 +5,7 @@ from django.conf import settings
 class Profile(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    first_name = models.CharField(max_length=30, default=None)
-    last_name = models.CharField(max_length=30, default=None)
-    phone_number = models.IntegerField(default=None)
-    email = models.EmailField(max_length=30, default=None)
+    phone_number = models.IntegerField(null=True)
 
     def __str__(self):
         return f'Profile for user {self.user.username}'

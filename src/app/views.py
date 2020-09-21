@@ -1,12 +1,16 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib.auth.decorators import login_required
-from .models import Profile, TradeHistory, Stock, StockPrice
-from .resources import TradeHistoryResource
 from django.http import HttpResponse
+
+from .models import Profile, TradeHistory, Stock
+from .resources import TradeHistoryResource
+from .forms import UserEditForm, ProfileEditForm
+
 import csv
 import io
 import requests
-
 
 
 @login_required
@@ -16,13 +20,20 @@ def dashboard(request):
 
 @login_required
 def edit_profile(request):
-    try:
-        profile = Profile.objects.get(user=user)
-    except:
-        profile = 'Profile does not exist'
-    context = {'profile': profile}
-
-    return render(request, 'account/edit.html', context)
+    if request.method == 'POST':
+        user_form = UserEditForm(instance=request.user, data=request.POST)
+        profile_form = ProfileEditForm(instance=request.user.profile,
+                                       data=request.POST)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+        else:
+            user_form = UserEditForm()
+            return render(request, 'account/edit.html', {'user_form': user_form})
+    else:
+        user_form = UserEditForm(instance=request.user)
+        profile_form = ProfileEditForm(instance=request.user.profile)
+    return render(request, 'account/edit.html', {'user_form': user_form, 'profile_form': profile_form})
 
 
 @login_required
@@ -41,11 +52,18 @@ def trades(request):
         user = request.user
         user_id = Profile.objects.get(user=user)
     except:
+        Profile.objects.get_or_create(user=request.user)
         return redirect(edit_profile)
+
     if request.method == 'POST':
-        csv_file = request.FILES['importData']
+        try:
+            csv_file = request.FILES['importData']
+        except MultiValueDictKeyError:
+            messages.warning(request, 'First you have to pick a file!')
+            return render(request, 'account/trade_utility.html')
         if not csv_file.name.endswith('.csv'):
-            print("wrong file type")
+            messages.warning(request, 'You try to import file which has different extension than .csv')
+            return render(request, 'account/trade_utility.html')
         new_trades = csv_file.read().decode('UTF-8')
         io_string = io.StringIO(new_trades)
         next(io_string)
@@ -53,7 +71,9 @@ def trades(request):
             try:
                 stock_id = Stock.objects.get(symbol=col[1])
             except:
-                print('There is no such stock in database:', col[1])
+                messages.warning(request, f"Stock which cause an error {col[1]}, "
+                                          f"Please contact with admin, we don't have this stock in our base")
+                return render(request, 'account/trade_utility.html')
             trade_history = TradeHistory(user=user_id,
                                          stock=stock_id,
                                          date_time=col[0],
@@ -63,7 +83,7 @@ def trades(request):
                                          stock_price=col[4],
                                          value=col[5])
             trade_history.save()
-
+        messages.success(request, 'DataBase update completed!')
     return render(request, 'account/trade_utility.html')
 
 

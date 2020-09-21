@@ -5,7 +5,7 @@ from import_export.admin import ImportExportModelAdmin
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'first_name', 'last_name', 'phone_number', 'email']
+    list_display = ['user', 'phone_number']
 
 
 @admin.register(Stock)

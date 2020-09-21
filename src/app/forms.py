@@ -1,5 +1,6 @@
 from django import forms
 from .models import Profile
+from django.contrib.auth.models import User
 
 
 class LoginForm(forms.Form):
@@ -7,7 +8,13 @@ class LoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
 
 
-class ProfileUpdateForm(forms.ModelForm):
+class UserEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+
+class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'phone_number', 'email']
+        fields = ['phone_number']
