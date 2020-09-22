@@ -4,9 +4,9 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 
-from .models import Profile, TradeHistory, Stock
+from .models import Profile, TradeHistory, Stock, StockPrice
 from .resources import TradeHistoryResource
-from .forms import UserEditForm, ProfileEditForm
+from .forms import UserEditForm, ProfileEditForm, DateForm
 
 import csv
 import io
@@ -33,6 +33,7 @@ def edit_profile(request):
     else:
         user_form = UserEditForm(instance=request.user)
         profile_form = ProfileEditForm(instance=request.user.profile)
+    messages.success(request, 'You successfully enter changes to your profile')
     return render(request, 'account/edit.html', {'user_form': user_form, 'profile_form': profile_form})
 
 
@@ -83,7 +84,7 @@ def trades(request):
                                          stock_price=col[4],
                                          value=col[5])
             trade_history.save()
-        messages.success(request, 'DataBase update completed!')
+        messages.success(request, 'Data Base update completed!')
     return render(request, 'account/trade_utility.html')
 
 
@@ -100,15 +101,27 @@ def export_data(request):
 
 @login_required
 def sync(request):
-    # in progress
+    date_form = DateForm()
     stock = Stock.objects.all()
-    start_date = '20200101'
-    end_date = '20200901'
-    for field in stock:
-        ticker = field.ticker
-        download_url = f'https://stooq.com//q/d/l/?s={ticker}&d1={start_date}&d2={end_date}&i=d'
-        req = requests.get(download_url)
-        url_content = req.content.decode('UTF-8')
-        io_string = io.StringIO(url_content)
-        next(io_string)
-    return render(request, 'account/dashboard.html')
+    if request.method == 'POST':
+        start_date = str(request.POST['start_date']).replace("-", "")
+        end_date = str(request.POST['end_date']).replace("-", "")
+
+        for field in stock:
+            ticker = field.ticker
+            download_url = f'https://stooq.com//q/d/l/?s={ticker}&d1={start_date}&d2={end_date}&i=d'
+            req = requests.get(download_url)
+            url_content = req.content.decode('UTF-8')
+            io_string = io.StringIO(url_content)
+            next(io_string)
+            for row in csv.reader(io_string, delimiter=',', quotechar="|"):
+                price_history = StockPrice(
+                    date=row[0],
+                    open=row[1],
+                    high=row[2],
+                    low=row[3],
+                    close=row[4],
+                    volume=row[5])
+                price_history.save()
+
+    return render(request, 'account/historical_price_update.html', {'date_form': date_form})
