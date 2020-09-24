@@ -104,24 +104,37 @@ def sync(request):
     date_form = DateForm()
     stock = Stock.objects.all()
     if request.method == 'POST':
-        start_date = str(request.POST['start_date']).replace("-", "")
-        end_date = str(request.POST['end_date']).replace("-", "")
+        try:
 
-        for field in stock:
-            ticker = field.ticker
-            download_url = f'https://stooq.com//q/d/l/?s={ticker}&d1={start_date}&d2={end_date}&i=d'
-            req = requests.get(download_url)
-            url_content = req.content.decode('UTF-8')
-            io_string = io.StringIO(url_content)
-            next(io_string)
-            for row in csv.reader(io_string, delimiter=',', quotechar="|"):
-                price_history = StockPrice(
-                    date=row[0],
-                    open=row[1],
-                    high=row[2],
-                    low=row[3],
-                    close=row[4],
-                    volume=row[5])
-                price_history.save()
+            start_date = str(request.POST['start_date']).replace("-", "")
+            end_date = str(request.POST['end_date']).replace("-", "")
 
-    return render(request, 'account/historical_price_update.html', {'date_form': date_form})
+            for field in stock:
+                ticker = field.ticker
+                stock_id = Stock.objects.get(ticker=ticker)
+                download_url = f'https://stooq.com//q/d/l/?s={ticker}&d1={start_date}&d2={end_date}&i=d'
+                req = requests.get(download_url)
+                url_content = req.content.decode('UTF-8')
+                io_string = io.StringIO(url_content)
+                print(ticker, io_string[0])
+                next(io_string)
+                for row in csv.reader(io_string, delimiter=',', quotechar="|"):
+                    price_history = StockPrice(
+                        stock=stock_id,
+                        date=row[0],
+                        open=row[1],
+                        high=row[2],
+                        low=row[3],
+                        close=row[4],
+                        volume=row[5])
+                    price_history.save()
+            messages.success(request, 'Data base successfully updated')
+        except:
+            messages.warning(request, 'something went wrong')
+
+    stock_price = StockPrice.objects.all().filter(stock__in=stock).filter(date='2020-09-23')
+
+    return render(request, 'account/historical_price_update.html', {
+        'date_form': date_form,
+        'stock': stock,
+        'stock_price': stock_price})
