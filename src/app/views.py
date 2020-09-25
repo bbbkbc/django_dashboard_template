@@ -6,7 +6,7 @@ from django.http import HttpResponse
 
 from .models import Profile, TradeHistory, Stock, StockPrice
 from .resources import TradeHistoryResource
-from .forms import UserEditForm, ProfileEditForm, DateForm
+from .forms import UserEditForm, ProfileEditForm, DateForm, TradeForm
 
 import csv
 import io
@@ -86,6 +86,20 @@ def trades(request):
             trade_history.save()
         messages.success(request, 'Data Base update completed!')
     return render(request, 'account/trade_utility.html')
+
+
+@login_required
+def add_new_trade(request):
+    form = TradeForm(request.POST or None)
+
+    if form.is_valid():
+        form.save()
+        form = TradeForm()
+
+    trade_history = TradeHistory.objects.all().order_by('-date_time')[:10]
+    context = {'form': form,
+               'trade_tab': trade_history}
+    return render(request, 'account/add_new_trade.html', context)
 
 
 @login_required

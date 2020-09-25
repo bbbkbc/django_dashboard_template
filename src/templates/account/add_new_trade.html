@@ -1,0 +1,63 @@
+{% extends 'account/dashboard.html' %}
+{% block title %}Add new trade{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Add new transaction</h6>
+            </div>
+            <div class="card-body">
+
+                <form method="POST" class="mb-2">
+                    <table class="table table-borderless">
+                    {% csrf_token %}
+                    {{ form.as_table }}
+                    </table>
+                    <hr>
+                    <input type="submit" class="btn btn-primary btn-user btn-block" value="Save"/>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Ten last trades</h6>
+            </div>
+            <div class="card-body">
+
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Stock Name</th>
+                        <th scope="col">Date Time</th>
+                        <th scope="col">Site</th>
+                        <th scope="col">Shares number</th>
+                        <th scope="col">Value</th>
+                        <th scope="col">Price</th>
+                    </tr>
+                    </thead>
+                    {% for item in trade_tab %}
+                    <tbody>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.stock }}</td>
+                    <td>{{ item.date_time.date }}</td>
+                    <td>{{ item.site }}</td>
+                    <td>{{ item.num_of_share }}</td>
+                    <td>{{ item.value }}</td>
+                    <td>{{ item.stock_price }}</td>
+                    </tbody>
+                    {% endfor %}
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

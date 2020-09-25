@@ -10,6 +10,7 @@ urlpatterns = [
     path('trades/', views.trades, name='trades'),
     path('sync/', views.sync, name='sync'),
     path('export_data/', views.export_data, name='export_data'),
+    path('add_new_trade/', views.add_new_trade, name='add_new_trade'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('password_change/', auth_views.PasswordChangeView.as_view(), name='password_change'),

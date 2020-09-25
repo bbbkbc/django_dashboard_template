@@ -1,7 +1,8 @@
 from django import forms
-from .models import Profile
+from .models import Profile, TradeHistory
 from django.contrib.auth.models import User
 from django.utils import timezone
+
 
 class LoginForm(forms.Form):
     username = forms.CharField()
@@ -27,3 +28,19 @@ class DateInput(forms.DateInput):
 class DateForm(forms.Form):
     start_date = forms.DateField(widget=DateInput, initial=None)
     end_date = forms.DateField(widget=DateInput,  initial=None)
+
+
+class TradeForm(forms.ModelForm):
+    date_time = forms.DateTimeField(initial=timezone.now())
+
+    class Meta:
+        model = TradeHistory
+        fields = ['user',
+                  'stock',
+                  'site',
+                  'date_time',
+                  'name',
+                  'site',
+                  'num_of_share',
+                  'stock_price',
+                  'value']
