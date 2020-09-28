@@ -12,25 +12,23 @@
             <h1 class="h4 text-gray-900 mb-4">Please set dates field</h1>
           </div>
           <form method="post">
-            {{ date_form.as_p }}
-            {% csrf_token %}
+            <table>
+              {{ date_form.as_table }}
+              {% csrf_token %}
+            </table>
+            <br>
             <input class="btn btn-primary btn-user btn-block" type="submit" value="Save changes">
           </form>
           <hr>
-          <table class="table table-bordered">
-            <thead>
-            <tr>
-              <th scope="col">Stock Name</th>
-              <th scope="col">Last date</th>
-            </tr>
-            </thead>
-            {% for item in stock_price %}
-            <tbody>
-            <td>{{ item.stock }}</td>
-            <td>{{ item.date }}</td>
-            </tbody>
-            {% endfor %}
-          </table>
+          <form method="post">
+            <table>
+            {{ filter_form.as_table }}
+            {% csrf_token %}
+            </table>
+            <br>
+            <input class="btn btn-primary btn-user btn-block" type="submit" value="Filter by date">
+          </form>
+                {{ df2 | safe }}
         </div>
 
       </div>

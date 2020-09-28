@@ -3,14 +3,16 @@ from django.contrib import messages
 from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.views.generic import TemplateView
 
 from .models import Profile, TradeHistory, Stock, StockPrice
 from .resources import TradeHistoryResource
-from .forms import UserEditForm, ProfileEditForm, DateForm, TradeForm
+from .forms import UserEditForm, ProfileEditForm, DateForm, TradeForm, FilterForm
 
 import csv
 import io
 import requests
+import pandas as pd
 
 
 @login_required
@@ -115,24 +117,29 @@ def export_data(request):
 
 @login_required
 def sync(request):
-    date_form = DateForm()
+    date_form = DateForm(request.POST or None)
     stock = Stock.objects.all()
-    if request.method == 'POST':
-        try:
-
-            start_date = str(request.POST['start_date']).replace("-", "")
-            end_date = str(request.POST['end_date']).replace("-", "")
-
-            for field in stock:
+    if date_form.is_valid():
+        start_date = str(request.POST['start_date']).replace("-", "")
+        end_date = str(request.POST['end_date']).replace("-", "")
+        for field in stock:
+            try:
+                last_record = StockPrice.objects.filter(stock=field).latest('date')
+            except StockPrice.DoesNotExist:
+                print(field, 'no in db')
                 ticker = field.ticker
                 stock_id = Stock.objects.get(ticker=ticker)
                 download_url = f'https://stooq.com//q/d/l/?s={ticker}&d1={start_date}&d2={end_date}&i=d'
                 req = requests.get(download_url)
                 url_content = req.content.decode('UTF-8')
                 io_string = io.StringIO(url_content)
-                print(ticker, io_string[0])
                 next(io_string)
+                counter = 0
                 for row in csv.reader(io_string, delimiter=',', quotechar="|"):
+                    if counter == 0:
+                        print(row)
+                        counter += 1
+
                     price_history = StockPrice(
                         stock=stock_id,
                         date=row[0],
@@ -142,13 +149,35 @@ def sync(request):
                         close=row[4],
                         volume=row[5])
                     price_history.save()
-            messages.success(request, 'Data base successfully updated')
-        except:
-            messages.warning(request, 'something went wrong')
 
-    stock_price = StockPrice.objects.all().filter(stock__in=stock).filter(date='2020-09-23')
+    filter_form = FilterForm(request.POST or None)
 
-    return render(request, 'account/historical_price_update.html', {
-        'date_form': date_form,
-        'stock': stock,
-        'stock_price': stock_price})
+    if filter_form.is_valid():
+        filter_date = str(request.POST['filter_date'])
+    else:
+        filter_date = '2020-09-23'
+
+    stock_price = StockPrice.objects.all().filter(stock__in=stock).filter(date=filter_date)
+    stock_price2 = StockPrice.objects.all().filter(stock__in=stock).filter(date=filter_date).values()
+
+    df = pd.DataFrame(stock_price)
+    df2 = pd.DataFrame(stock_price2)
+    df2['name'] = df
+    df2 = df2[['name', 'date', 'close']]
+    context = {'date_form': date_form,
+               'filter_form': filter_form,
+               'stock': stock,
+               'df2': df2.to_html()}
+    return render(request, 'account/historical_price_update.html', context)
+
+
+class StockChartView(TemplateView):
+    template_name = 'account/stock_chart.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        stock_price = StockPrice.objects.all().filter(stock=0).values()
+        df = pd.DataFrame(stock_price)
+        df = df.to_html()
+        context = {'df': df}
+        return context

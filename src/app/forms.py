@@ -30,6 +30,10 @@ class DateForm(forms.Form):
     end_date = forms.DateField(widget=DateInput,  initial=None)
 
 
+class FilterForm(forms.Form):
+    filter_date = forms.DateField(widget=DateInput, initial=None)
+
+
 class TradeForm(forms.ModelForm):
     date_time = forms.DateTimeField(initial=timezone.now())
 
