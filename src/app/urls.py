@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('edit/', views.edit_profile, name='edit'),
-    path('stock_chart/', views.StockChartView.as_view(), name='stock_chart'),
+    path('stock_chart/', views.stock_chart, name='stock_chart'),
     path('tables/', views.tables, name='tables'),
     path('trades/', views.trades, name='trades'),
     path('sync/', views.sync, name='sync'),

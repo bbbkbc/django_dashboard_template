@@ -7,7 +7,7 @@ from django.views.generic import TemplateView
 
 from .models import Profile, TradeHistory, Stock, StockPrice
 from .resources import TradeHistoryResource
-from .forms import UserEditForm, ProfileEditForm, DateForm, TradeForm, FilterForm
+from .forms import UserEditForm, ProfileEditForm, DateForm, TradeForm, FilterForm, ChartsForm
 
 import csv
 import io
@@ -171,13 +171,46 @@ def sync(request):
     return render(request, 'account/historical_price_update.html', context)
 
 
-class StockChartView(TemplateView):
-    template_name = 'account/stock_chart.html'
+def stock_chart(request):
+    labels = []
+    data = []
+    date_form = DateForm(request.POST or None)
+    charts_form = ChartsForm(request.POST or None)
+    filter_price = 'open'
+    if request.method == 'POST':
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        stock_price = StockPrice.objects.all().filter(stock=0).values()
-        df = pd.DataFrame(stock_price)
-        df = df.to_html()
-        context = {'df': df}
-        return context
+        if date_form.is_valid():
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+
+        if charts_form.is_valid():
+            filter_stock = request.POST.get('stock')
+            filter_price = request.POST.get('price')
+            stock_name = Stock.objects.get(id=filter_stock).symbol
+            stock_info = Stock.objects.get(id=filter_stock)
+        qs = StockPrice.objects.all().filter(
+            stock=filter_stock).filter(
+            date__range=[start_date, end_date]).order_by('date')
+    else:
+        stock_info = Stock.objects.get(id=0)
+        stock_name = 'TAURONPE'
+        qs = StockPrice.objects.all().filter(stock=0).order_by('date')
+
+    for item in qs:
+        labels.append(str(item.date))
+        if filter_price == 'open':
+            data.append(item.open)
+        elif filter_price == 'high':
+            data.append(item.high)
+        elif filter_price == 'low':
+            data.append(item.low)
+        elif filter_price == 'close':
+            data.append(item.close)
+
+    context = {'date_form': date_form,
+               'charts_form': charts_form,
+               'labels': labels,
+               'data': data,
+               'symbol': stock_name,
+               'stock_info': stock_info}
+    return render(request, 'account/stock_chart.html', context)

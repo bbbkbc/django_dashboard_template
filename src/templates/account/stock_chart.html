@@ -6,32 +6,26 @@ Stock Charts
 
 {% block scripts %}
 <script>
-    $(document).ready(function(){
+$(document).ready(function(){
     var ctx = document.getElementById('myChart').getContext('2d');
     var myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [{% for item in df %} {{ item.date }}, {% endfor %}],
+            labels: {{ labels|safe }},
             datasets: [{
-                label: '# Trade History Chart',
-                data: [{% for item in df %} {{ item.open }}, {% endfor %}],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderWidth: 1
+                label: '{{ symbol }} CHART',
+                data: {{ data|safe }},
+              lineTension: 0.2,
+              backgroundColor: "rgba(78, 115, 223, 0.05)",
+              borderColor: "rgba(78, 115, 223, 1)",
+              pointRadius: 2,
+              pointBackgroundColor: "rgba(78, 115, 223, 1)",
+              pointBorderColor: "rgba(78, 115, 223, 1)",
+              pointHoverRadius: 2,
+              pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+              pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+              pointHitRadius: 4,
+              pointBorderWidth: 1,
             }]
         },
         options: {
@@ -46,12 +40,64 @@ Stock Charts
     });
 });
 </script>
-
 {% endblock scripts %}
 
 {% block content %}
-Charts !!!
-<div class="container">
-    <canvas id="myChart" width="100" height="50"></canvas>
-</div>
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="row">
+
+        <div class="col-xl-9 col-lg-12">
+
+            <!-- Area Chart -->
+            <div class="card shadow mb-1">
+                <div class="card-body">
+                    <canvas id="myChart"></canvas>
+                    <hr>
+                </div>
+                <div class="row ml-3 mt-n4">
+                    <div class="col">
+                        <form method="post">
+                            <table class="table-sm table-borderless">
+                                {{ date_form.as_table }}
+                                {% csrf_token %}
+
+                                {{ charts_form.as_table }}
+                                {% csrf_token %}
+                            </table>
+                            <input class="btn btn-secondary btn-sm ml-1" type="submit" value="   Filter   ">
+                        </form>
+                    </div>
+                    <div class="col col-xl-4">
+                        <table class="table-hover table-sm table-bordered">
+                            <tr>
+                                <th>Symbol:</th>
+                                <td>{{ stock_info.symbol }}</td>
+                            </tr>
+                            <tr>
+                                <th>Ticker:</th>
+                                <td>{{ stock_info.ticker }}</td>
+                            </tr>
+                            <tr>
+                                <th>Industry:</th>
+                                <td>{{ stock_info.industry }}</td>
+                            </tr>
+                            <tr>
+                                <th>Rating:</th>
+                                <td>{{ stock_info.rating }}</td>
+                            </tr>
+                            <tr>
+                                <th>Index:</th>
+                                <td>{{ stock_info.index }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
 {% endblock content %}
