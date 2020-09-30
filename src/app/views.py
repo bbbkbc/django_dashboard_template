@@ -13,6 +13,7 @@ import csv
 import io
 import requests
 import pandas as pd
+import operator
 
 
 @login_required
@@ -205,6 +206,20 @@ def stock_chart(request):
         stock_name = 'TAURONPE'
         qs = StockPrice.objects.all().filter(stock=0).order_by('date')
 
+    stock_obj = Stock.objects.all()
+    perfomance_dict = {}
+
+    for element in stock_obj:
+        stock_price_first = StockPrice.objects.filter(stock=element).order_by('-date')[10]
+        stock_price_last = StockPrice.objects.filter(stock=element).order_by('-date')[0]
+        price_return = ((stock_price_last.close -
+                         stock_price_first.close) / ((stock_price_last.close +
+                                                      stock_price_first.close)/2))*100
+        perfomance_dict[element] = round(price_return, ndigits=2)
+    sorted_dict = (sorted(perfomance_dict.items(), key=operator.itemgetter(1), reverse=True))
+    worst_5 = sorted_dict[-5:]
+    best_5 = sorted_dict[:5]
+
     for item in qs:
         volume.append(item.volume)
         labels.append(item.date.strftime('%m/%d'))
@@ -223,5 +238,7 @@ def stock_chart(request):
                'data': data,
                'symbol': stock_name,
                'stock_info': stock_info,
-               'volume': volume}
+               'volume': volume,
+               'best': best_5,
+               'worst': worst_5}
     return render(request, 'account/stock_chart.html', context)

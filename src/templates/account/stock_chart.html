@@ -76,7 +76,7 @@ $(document).ready(function(){
     <!-- Content Row -->
     <div class="row">
 
-        <div class="col-xl-8 col-lg-7">
+        <div class="col-xl-8 col-lg-12">
 
             <!-- Area Chart -->
             <div class="card shadow mb-2">
@@ -104,9 +104,9 @@ $(document).ready(function(){
 
         </div>
 
-        <!-- Donut Chart -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
+        <!-- Filter data -->
+        <div class="col-xl-4 col-lg-6">
+            <div class="card shadow mb-2">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Stock Filters and Quick Info</h6>
@@ -149,7 +149,52 @@ $(document).ready(function(){
                 </div>
 
             </div>
+
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">High Low Return 10 Days</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+
+                        <tr>
+                            <th scope="col">Best Stocks</th>
+                            <th scope="col">Return</th>
+                        </tr>
+
+                        </thead>
+                        {% for key, value in best %}
+                        <tbody>
+                        <td>{{ key }}</td>
+                        <td class="text-success">{{ value }} %</td>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                        <tr>
+                            <th scope="col">Worst Stocks</th>
+                            <th scope="col">Return</th>
+                        </tr>
+
+                        </thead>
+                        {% for key, value in worst %}
+                        <tbody>
+                        <td>{{ key }}</td>
+                        <td class="text-danger">{{ value }} %</td>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
         </div>
+
     </div>
 
 </div>
