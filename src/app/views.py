@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.views.generic import TemplateView
+from datetime import datetime
 
 from .models import Profile, TradeHistory, Stock, StockPrice
 from .resources import TradeHistoryResource
@@ -153,7 +153,15 @@ def sync(request):
     filter_form = FilterForm(request.POST or None)
 
     if filter_form.is_valid():
-        filter_date = str(request.POST['filter_date'])
+
+        filter_date = request.POST.get('filter_date')
+        filter_date_dt = datetime.strptime(filter_date, '%Y-%m-%d').date()
+        last_date = StockPrice.objects.filter().latest('date').date
+
+        if filter_date_dt > last_date:
+            filter_date = last_date
+            messages.warning(request, 'You try to reach unavailable date')
+
     else:
         filter_date = '2020-09-23'
 
@@ -173,6 +181,7 @@ def sync(request):
 
 def stock_chart(request):
     labels = []
+    volume = []
     data = []
     date_form = DateForm(request.POST or None)
     charts_form = ChartsForm(request.POST or None)
@@ -197,7 +206,8 @@ def stock_chart(request):
         qs = StockPrice.objects.all().filter(stock=0).order_by('date')
 
     for item in qs:
-        labels.append(str(item.date))
+        volume.append(item.volume)
+        labels.append(item.date.strftime('%m/%d'))
         if filter_price == 'open':
             data.append(item.open)
         elif filter_price == 'high':
@@ -212,5 +222,6 @@ def stock_chart(request):
                'labels': labels,
                'data': data,
                'symbol': stock_name,
-               'stock_info': stock_info}
+               'stock_info': stock_info,
+               'volume': volume}
     return render(request, 'account/stock_chart.html', context)

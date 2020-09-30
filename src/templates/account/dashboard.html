@@ -214,10 +214,6 @@
                         {% block scripts %}
                         {% endblock scripts %}
 
-                        {% block content %}
-                        <h1>Welcome Page</h1>
-                        {% endblock %}
-
                         {% for message in messages %}
                         <div class="alert {{ message.tags }} alert-dismissible alert alert-primary" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -226,6 +222,11 @@
                             {{ message }}
                         </div>
                         {% endfor %}
+
+                        {% block content %}
+                        <h1>Welcome Page</h1>
+                        {% endblock %}
+
 
                     </div>
                     <!-- /.container-fluid -->

@@ -7,25 +7,52 @@ Stock Charts
 {% block scripts %}
 <script>
 $(document).ready(function(){
-    var ctx = document.getElementById('myChart').getContext('2d');
+    var ctx = document.getElementById('myChartPrice').getContext('2d');
     var myChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: {{ labels|safe }},
             datasets: [{
-                label: '{{ symbol }} CHART',
+                label: 'Price',
                 data: {{ data|safe }},
-              lineTension: 0.2,
+              lineTension: 0.1,
               backgroundColor: "rgba(78, 115, 223, 0.05)",
               borderColor: "rgba(78, 115, 223, 1)",
-              pointRadius: 2,
+              pointRadius: 3,
               pointBackgroundColor: "rgba(78, 115, 223, 1)",
               pointBorderColor: "rgba(78, 115, 223, 1)",
-              pointHoverRadius: 2,
+              pointHoverRadius: 1,
               pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
               pointHoverBorderColor: "rgba(78, 115, 223, 1)",
               pointHitRadius: 4,
               pointBorderWidth: 1,
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+});
+</script>
+<script>
+$(document).ready(function(){
+    var ctx = document.getElementById('myChartVolume').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels|safe }},
+            datasets: [{
+                label: 'Volume',
+                data: {{ volume|safe }},
+                backgroundColor: "#4e73df",
+                hoverBackgroundColor: "#2e59d9",
+                borderColor: "#4e73df",
             }]
         },
         options: {
@@ -45,59 +72,86 @@ $(document).ready(function(){
 {% block content %}
 
 <div class="container-fluid">
-    <!-- Page Heading -->
+
+    <!-- Content Row -->
     <div class="row">
 
-        <div class="col-xl-9 col-lg-12">
+        <div class="col-xl-8 col-lg-7">
 
             <!-- Area Chart -->
-            <div class="card shadow mb-1">
-                <div class="card-body">
-                    <canvas id="myChart"></canvas>
-                    <hr>
-                </div>
-                <div class="row ml-3 mt-n4">
-                    <div class="col">
-                        <form method="post">
-                            <table class="table-sm table-borderless">
-                                {{ date_form.as_table }}
-                                {% csrf_token %}
+            <div class="card shadow mb-2">
 
-                                {{ charts_form.as_table }}
-                                {% csrf_token %}
-                            </table>
-                            <input class="btn btn-secondary btn-sm ml-1" type="submit" value="   Filter   ">
-                        </form>
+                <div class="card-body">
+
+                    <div>
+                        <canvas id="myChartPrice"></canvas>
                     </div>
-                    <div class="col col-xl-4">
-                        <table class="table-hover table-sm table-bordered">
-                            <tr>
-                                <th>Symbol:</th>
-                                <td>{{ stock_info.symbol }}</td>
-                            </tr>
-                            <tr>
-                                <th>Ticker:</th>
-                                <td>{{ stock_info.ticker }}</td>
-                            </tr>
-                            <tr>
-                                <th>Industry:</th>
-                                <td>{{ stock_info.industry }}</td>
-                            </tr>
-                            <tr>
-                                <th>Rating:</th>
-                                <td>{{ stock_info.rating }}</td>
-                            </tr>
-                            <tr>
-                                <th>Index:</th>
-                                <td>{{ stock_info.index }}</td>
-                            </tr>
-                        </table>
-                    </div>
+
                 </div>
             </div>
 
+            <!-- Bar Chart -->
+            <div class="card shadow mb-2">
+
+                <div class="card-body">
+
+                    <div>
+                        <canvas id="myChartVolume"></canvas>
+                    </div>
+
+                </div>
+            </div>
 
         </div>
 
+        <!-- Donut Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Stock Filters and Quick Info</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <form method="post">
+                        <table class="table-sm table-borderless">
+                            {{ date_form.as_table }}
+                            {% csrf_token %}
+
+                            {{ charts_form.as_table }}
+                            {% csrf_token %}
+                        </table>
+                        <input class="btn btn-secondary btn-sm ml-1" type="submit" value="   Filter   ">
+                    </form>
+
+                    <table class="table-hover table-sm table-bordered ml-1">
+                        <tr>
+                            <th>Symbol:</th>
+                            <td>{{ stock_info.symbol }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ticker:</th>
+                            <td>{{ stock_info.ticker }}</td>
+                        </tr>
+                        <tr>
+                            <th>Industry:</th>
+                            <td>{{ stock_info.industry }}</td>
+                        </tr>
+                        <tr>
+                            <th>Rating:</th>
+                            <td>{{ stock_info.rating }}</td>
+                        </tr>
+                        <tr>
+                            <th>Index:</th>
+                            <td>{{ stock_info.index }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+        </div>
     </div>
+
+</div>
+
 {% endblock content %}
