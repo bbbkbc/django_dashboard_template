@@ -42,11 +42,6 @@ def edit_profile(request):
 
 
 @login_required
-def charts(request):
-    return render(request, 'account/charts.html')
-
-
-@login_required
 def tables(request):
     return render(request, 'account/tables.html')
 

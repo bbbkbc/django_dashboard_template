@@ -1,0 +1,13 @@
+{% extends "account/dashboard.html" %}
+
+
+{% block scripts %}
+{% endblock scripts %}
+{% block content %}
+    <form method="post">
+            {{ date_form.as_table }}
+            {% csrf_token %}
+        <input class="btn btn-secondary btn-sm ml-1" type="submit" value="Done">
+    </form>
+
+{% endblock %}
