@@ -3,7 +3,8 @@ from django.contrib import messages
 from django.utils.datastructures import MultiValueDictKeyError
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from datetime import datetime
+from datetime import datetime, timedelta
+
 
 from .models import Profile, TradeHistory, Stock, StockPrice
 from .resources import TradeHistoryResource
@@ -126,8 +127,11 @@ def sync(request):
         for field in stock:
             try:
                 last_record = StockPrice.objects.filter(stock=field).latest('date')
+                delta = timedelta(days=1)
+                start_date = str(last_record.date + delta).replace("-", "")
             except StockPrice.DoesNotExist:
                 print(field, 'no in db')
+            finally:
                 ticker = field.ticker
                 stock_id = Stock.objects.get(ticker=ticker)
                 download_url = f'https://stooq.com//q/d/l/?s={ticker}&d1={start_date}&d2={end_date}&i=d'
@@ -138,7 +142,7 @@ def sync(request):
                 counter = 0
                 for row in csv.reader(io_string, delimiter=',', quotechar="|"):
                     if counter == 0:
-                        print(row)
+                        print(ticker, row)
                         counter += 1
 
                     price_history = StockPrice(
