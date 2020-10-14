@@ -3,47 +3,60 @@ from django.contrib.auth.decorators import login_required
 from app.models import StockPrice, TradeHistory, Stock
 from .models import Pnl
 from .forms import DateForm
-import queue
-from django.utils.timezone import now
-from datetime import timedelta
-
+from datetime import timedelta, datetime
+import pandas as pd
 
 
 @login_required
 def pnl(request):
-    pnl_obj = Pnl
     date_form = DateForm(request.POST or None)
-    buy_queue = queue.Queue()
-    lst_k = []
-
+    df_pnl_u = pd.DataFrame(columns=['date', 'pnl_u', 'stock_name', 'stock_id'])
     if date_form.is_valid():
         eval_date = request.POST['evaluation_date']
+        end_date = datetime.strptime(eval_date, '%Y-%m-%d').date()
         stock_base = Stock.objects.all()
         for stock_name in stock_base:
             trade_history = TradeHistory.objects.all().filter(
                 date_time__lte=eval_date).order_by(
                 'date_time').filter(stock=stock_name)
-            for item in trade_history:
-                if item.site == 'K':
-                    lst_k.append(item)
-            start_date = trade_history[0].date_time.date()
 
-            end_date = now().date()
-            days_number = int((end_date-start_date).days)
-            pnl_k = 0
-            pnl_s = 0
-            # for n in range(days_number):
-            #     evaluation_day = start_date + timedelta(n)
-            #     price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=evaluation_day)
-            #     for item in trade_history:
-            #         for record in price_history:
-            #             if item.site == 'K':
-            #                 diff_k = record.close - item.stock_price
-            #                 pnl_k = round(item.num_of_share * diff_k, ndigits=2)
-            #             elif item.site == 'S':
-            #                 diff_s = record.close - item.stock_price
-            #                 pnl_s = round(item.num_of_share * diff_s, ndigits=2)
-    print(lst_k)
+            try:
+                start_date = trade_history[0].date_time.date()
+            except IndexError:
+                print('queryset empty')
+                continue
+
+            buy_trades = []
+            sell_trades = []
+            for trade in trade_history:
+                if trade.site == 'K':
+                    buy_trades.append(trade)
+                else:
+                    sell_trades.append(trade)
+
+            # unrealized pnl
+            if len(sell_trades) == 0:
+                for item in buy_trades:
+                    item_date = item.date_time.date()
+                    days_number = int((end_date - item_date).days)
+                    for n in range(days_number):
+                        evaluation_day = item_date + timedelta(n)
+                        price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=evaluation_day)
+                        try:
+                            close_price = price_history[0].close
+                            pnl_unrealized = (close_price - item.stock_price) * item.num_of_share
+                            # print(evaluation_day, round(pnl_unrealized, ndigits=2), stock_name, item.id)
+                            df_pnl_u = df_pnl_u.append({'date': evaluation_day,
+                                                        'pnl_u': round(pnl_unrealized, ndigits=2),
+                                                        'stock_name': stock_name,
+                                                        'stock_id': item.id}, ignore_index=True
+                                                       )
+                        except IndexError:
+                            continue
+                            # print(evaluation_day, 'no price')
+
+    # print(df_pnl_u)
+
     # stock_price
     # num_of_share
     # site
