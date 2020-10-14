@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import Pnl
 
-# Register your models here.
+
+@admin.register(Pnl)
+class Pnl(admin.ModelAdmin):
+    pass

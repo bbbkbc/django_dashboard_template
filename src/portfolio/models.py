@@ -8,9 +8,9 @@ class Pnl(models.Model):
     pnl_live = models.FloatField()
     pnl_booked = models.FloatField()
     mkt_price = models.FloatField()
-    open_position = models.IntegerField()
+    open_position = models.FloatField()
     value = models.IntegerField()
     date = models.DateField()
 
     def __str__(self):
-        return self.stock
+        return str(self.stock)

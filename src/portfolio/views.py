@@ -36,6 +36,7 @@ def pnl(request):
 
             # unrealized pnl
             if len(sell_trades) == 0:
+                pnl_lst = []
                 for item in buy_trades:
                     item_date = item.date_time.date()
                     days_number = int((end_date - item_date).days)
@@ -45,17 +46,37 @@ def pnl(request):
                         try:
                             close_price = price_history[0].close
                             pnl_unrealized = (close_price - item.stock_price) * item.num_of_share
+                            value = item.num_of_share * close_price
                             # print(evaluation_day, round(pnl_unrealized, ndigits=2), stock_name, item.id)
-                            df_pnl_u = df_pnl_u.append({'date': evaluation_day,
-                                                        'pnl_u': round(pnl_unrealized, ndigits=2),
-                                                        'stock_name': stock_name,
-                                                        'stock_id': item.id}, ignore_index=True
-                                                       )
+                            pnl_lst.append([
+                                evaluation_day,
+                                round(pnl_unrealized, ndigits=2),
+                                int(item.num_of_share),
+                                close_price,
+                                value,
+                                stock_name])
                         except IndexError:
                             continue
-                            # print(evaluation_day, 'no price')
 
-    # print(df_pnl_u)
+                df = pd.DataFrame(pnl_lst[:], columns=[
+                    'date',
+                    'pnl_u',
+                    'num_of_share',
+                    'mkt_price',
+                    'value',
+                    'stock'])
+                df = df.groupby(df['date']).sum()
+                print(df)
+                for i in df.itertuples():
+                    pnl_unrealized = Pnl(
+                        stock=stock_name,
+                        pnl_live=i.pnl_u,
+                        pnl_booked=0,
+                        mkt_price=i.mkt_price,
+                        open_position=i.num_of_share,
+                        value=i.value,
+                        date=i.Index)
+                    pnl_unrealized.save()
 
     # stock_price
     # num_of_share
