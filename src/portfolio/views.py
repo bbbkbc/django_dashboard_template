@@ -6,6 +6,7 @@ from .forms import DateForm
 from datetime import timedelta, datetime
 import pandas as pd
 import numpy as np
+import queue
 
 
 @login_required
@@ -101,39 +102,46 @@ def pnl(request):
                     trade_lst.append(
                         [buy_trade.date_time.date(),
                          buy_trade.stock_price,
-                         buy_trade.num_of_share])
+                         buy_trade.num_of_share,
+                         'buy'])
                 for sell_trade in sell_trades:
                     trade_lst.append(
                         [sell_trade.date_time.date(),
                          sell_trade.stock_price,
-                         -int(sell_trade.num_of_share)])
-                dff = pd.DataFrame(data=trade_lst[:], columns=['date', 'price', 'quantity'])
-
-                before_df = []
-                for trade in dff.itertuples():
+                         sell_trade.num_of_share,
+                         'sell'])
+                deals = pd.DataFrame(data=trade_lst[:], columns=['date', 'price', 'quantity', 'side'])
+                deals['deal_id'] = deals.index
+                mtm_lst = []
+                for trade in deals.itertuples():
                     trade_date = trade.date
                     days_number = int((end_date - trade_date).days)
-                    for n in range(1, days_number):
+                    for n in range(days_number):
                         try:
                             date = trade_date + timedelta(n)
+
                             price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=date)
+
                             price = trade.price
                             quantity = trade.quantity
                             mkt_price = price_history[0].close
                             mtm = (mkt_price - price) * quantity
-                            before_df.append([date, price, quantity, mkt_price, mtm])
+                            trade_id = trade.deal_id
+                            side = trade.side
+                            mtm_lst.append([date, price, quantity, mkt_price, mtm, trade_id, side])
                         except IndexError:
                             continue
-                df_per_day = pd.DataFrame(before_df[:], columns=['date', 'price', 'quantity', 'mkt', 'mtm'])
-                df_per_day = df_per_day.groupby(df_per_day['date']).sum()
-                for position in df_per_day.itertuples():
-                    if position.quantity == 0:
-                        print(position.Index, stock_name, 'position close', 'pnl:', position.mtm)
+                    deals_mtm = pd.DataFrame(mtm_lst, columns=[
+                        'date',
+                        'price',
+                        'quantity',
+                        'mkt_price',
+                        'mtm',
+                        'trade_id',
+                        'side'])
+
+                dmtm = deals_mtm.groupby(deals_mtm['date']).get_group()
 
 
-    # stock_price
-    # num_of_share
-    # site
-    # stock
     context = {'date_form': date_form}
     return render(request, 'account/pnl.html', context)
