@@ -43,57 +43,52 @@ def pnl(request):
 
             # unrealized pnl
             if len(sell_trades) == 0:
-                if Pnl.objects.filter(stock=stock_name).exists():
-                    print('pnl for', stock_name, 'exist')
-
-                else:
-                    pnl_lst = []
-                    for item_buy in buy_trades:
-                        item_date = item_buy.date_time.date()
-                        days_number = int((end_date - item_date).days)
-                        for n in range(days_number):
-                            evaluation_day = item_date + timedelta(n)
-                            price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=evaluation_day)
-                            try:
-                                close_price = price_history[0].close
-                                pnl_unrealized = (close_price - item_buy.stock_price) * item_buy.num_of_share
-                                position_value_at_now = item_buy.num_of_share * close_price
-                                position_value_at_open = item_buy.num_of_share * item_buy.stock_price
-                                num_of_share_live = int(item_buy.num_of_share)
-
-                                pnl_lst.append([
-                                    evaluation_day,
-                                    round(pnl_unrealized, ndigits=2),
-                                    close_price,
-                                    position_value_at_open,
-                                    position_value_at_now,
-                                    num_of_share_live])
-
-                            except IndexError:
-                                continue
-
-                    df = pd.DataFrame(pnl_lst[:], columns=[
-                        'date',
-                        'pnl_u',
-                        'mkt_price',
-                        'position_value_at_open',
-                        'position_value_at_now',
-                        'num_of_share_live'])
-                    df = df.groupby(df['date']).sum()
-
-                    for i in df.itertuples():
-                        pnl_unrealized = Pnl(
-                            user=user_id,
-                            stock=stock_name,
-                            pnl_live=i.pnl_u,
-                            pnl_booked=0,
-                            mkt_price=i.mkt_price,
-                            position_value_at_open=i.position_value_at_open,
-                            position_value_at_now=i.position_value_at_now,
-                            num_of_share_live=i.num_of_share_live,
-                            num_of_share_realized=0,
-                            date=i.Index)
-                        pnl_unrealized.save()
+                # if Pnl.objects.filter(stock=stock_name).exists():
+                #     print('pnl for', stock_name, 'exist')
+                #
+                # else:
+                #     pnl_lst = []
+                #     for item_buy in buy_trades:
+                #         item_date = item_buy.date_time.date()
+                #         days_number = int((end_date - item_date).days)
+                #         for n in range(days_number):
+                #             evaluation_day = item_date + timedelta(n)
+                #             price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=evaluation_day)
+                #             try:
+                #                 close_price = price_history[0].close
+                #                 pnl_unrealized = (close_price - item_buy.stock_price) * item_buy.num_of_share
+                #                 open_position = int(item_buy.num_of_share)
+                #
+                #                 pnl_lst.append([
+                #                     evaluation_day,
+                #                     round(pnl_unrealized, ndigits=2),
+                #                     close_price,
+                #                     open_position])
+                #
+                #             except IndexError:
+                #                 continue
+                #
+                #     df = pd.DataFrame(pnl_lst[:], columns=[
+                #         'date',
+                #         'pnl_u',
+                #         'mkt_price',
+                #         'position_value_at_open',
+                #         'position_value_at_now',
+                #         'num_of_share_live'])
+                #     df = df.groupby(df['date']).sum()
+                #
+                #     for i in df.itertuples():
+                #         pnl_unrealized = Pnl(
+                #             user=user_id,
+                #             stock=stock_name,
+                #             date=i.Index,
+                #             mkt_price=i.mkt_price,
+                #             pnl_unrealized=i.pnl_u,
+                #             pnl_realized=0,
+                #             open_position=i.num_of_share_live,
+                #             closed_position=0)
+                #         pnl_unrealized.save()
+                pass
 
             elif len(sell_trades) != 0:
                 trade_lst = []
@@ -140,7 +135,10 @@ def pnl(request):
                         'trade_id',
                         'side'])
 
-                dmtm = deals_mtm.groupby(deals_mtm['date']).get_group()
+                    deals_mtm = deals_mtm.sort_values('trade_id')
+                    into_fifo = deals_mtm.groupby(deals_mtm['date']).get_group('date')
+                    for i in into_fifo.itertuples():
+                        print(i)
 
     context = {'date_form': date_form}
     return render(request, 'account/pnl.html', context)
