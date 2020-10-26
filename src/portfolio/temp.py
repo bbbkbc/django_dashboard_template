@@ -71,16 +71,10 @@ class Fifo():
                 for open_items in self.buy_lst[n+1:]:
                     self.pnl_unrealized += open_items[1]
                     self.open_position += open_items[0]
-                return
-
-    def __str__(self):
-        s_1 = 'closed_position: {a} | closed_pnl: {c}'.format(a=self.closed_position, c=self.pnl_realized,)
-        s_2 = 'open_position: {b} | open_pnl: {d}'.format(b=self.open_position,  d=self.pnl_unrealized)
-        return s_1, s_2
+                return [self.closed_position, self.open_position, self.pnl_realized, self.pnl_unrealized]
 
 
 lb = [[100, 10], [100, 20], [50, 50], [20, 10], [30, 20]]
 ls = [[50, -10], [150, -10], [10, -10]]
 f = Fifo(buy_list=lb, sell_list=ls)
 print(f.run())
-print(f.__str__())
