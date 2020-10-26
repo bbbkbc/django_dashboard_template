@@ -142,6 +142,5 @@ def pnl(request):
 
                 dmtm = deals_mtm.groupby(deals_mtm['date']).get_group()
 
-
     context = {'date_form': date_form}
     return render(request, 'account/pnl.html', context)

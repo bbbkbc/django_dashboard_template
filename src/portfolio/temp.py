@@ -22,48 +22,65 @@ l2 = [5, 2, 19]
 #             return_value = ret + l1[n + 1:]
 #             return return_value
 
-
-
+# pnl_live = models.FloatField()
+# pnl_booked = models.FloatField()
+# mkt_price = models.FloatField()
+# position_value_at_open = models.FloatField()
+# position_value_at_now = models.FloatField()
+#
+# date = models.DateField()
 
 
 class Fifo():
-    def __init__(self):
-        self.buy_queue = queue.Queue()
-        self.sell_lst = queue.Queue()
-        self.rest = 0
-        self.pnl_unrealized = 0
-        self.pnl_realized = 0
+    def __init__(self, buy_list, sell_list):
+        self.buy_lst = buy_list
+        self.sell_lst = sell_list
+
         self.open_position = 0
         self.closed_position = 0
+        self.pnl_unrealized = 0
+        self.pnl_realized = 0
 
-    def run(self, lb, ls):
-        for i in lb:
-            self.buy_queue.put(i)
-        for x in ls:
-            self.sell_lst.put(x)
-        while not self.buy_queue.empty():
-            b_item = self.buy_queue.get()
-            mtm_b, position_b = b_item[1], b_item[0]
+    def run(self):
+        total_buy = sum(position[0] for position in self.buy_lst if position[0])
+        total_sell = sum(position[0] for position in self.sell_lst if position[0])
+        if total_sell > total_buy:
+            raise ValueError('Selled more than owned')
+        total_sell_pnl = sum(mtm_sell[1] for mtm_sell in self.sell_lst if mtm_sell[1])
+        self.pnl_realized -= total_sell_pnl
+        cumulative = 0
+        ret = []
 
-            while not (position_b <= 0 or self.sell_lst.empty()):
-                if self.rest != 0:
-                    position_b -= self.rest
-                    self.closed_position += self.rest
-                    self.rest = 0
-                s_item = self.sell_lst.get()
-                mtm_s, position_s = s_item[1], s_item[0]
-                position_b -= position_s
-                self.closed_position += position_s
-                if position_b <= 0:
-                    self.rest += abs(position_b)
+        for (n, x) in enumerate(self.buy_lst):
+            cumulative += x[0]
+            if cumulative < total_sell:
+                self.pnl_realized += x[1]
+                self.closed_position += x[0]
+                print(x)
+                continue
+            else:
+                remaining = cumulative - total_sell
+                closed_pos = (self.buy_lst[n][0] - remaining)
+                closed_pnl = (closed_pos / self.buy_lst[n][0]) * self.buy_lst[n][1]
+                open_pnl = (remaining / self.buy_lst[n][0]) * self.buy_lst[n][1]
+                self.pnl_realized += closed_pnl
+                self.pnl_unrealized += open_pnl
+                self.closed_position += closed_pos
+                self.open_position += remaining
+                print()
+                for open_items in self.buy_lst[n+1:]:
+                    self.pnl_unrealized += open_items[1]
+                    self.open_position += open_items[0]
+                return
 
-            if self.sell_lst.empty():
-                self.open_position += position_b
+    def __str__(self):
+        s_1 = 'closed_position: {a} | closed_pnl: {c}'.format(a=self.closed_position, c=self.pnl_realized,)
+        s_2 = 'open_position: {b} | open_pnl: {d}'.format(b=self.open_position,  d=self.pnl_unrealized)
+        return s_1, s_2
 
-        print(self.closed_position, self.open_position)
 
-
-lb = [[100, 10], [100, 20]]
-ls = [[50, -10], [30, -20], [22, -20]]
-f = Fifo()
-f.run(lb, ls)
+lb = [[100, 10], [100, 20], [50, 50], [20, 10], [30, 20]]
+ls = [[50, -10], [150, -10], [10, -10]]
+f = Fifo(buy_list=lb, sell_list=ls)
+print(f.run())
+print(f.__str__())
