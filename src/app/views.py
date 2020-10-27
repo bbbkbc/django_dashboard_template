@@ -116,6 +116,7 @@ def export_data(request):
 def sync(request):
     date_form = DateForm(request.POST or None)
     stock = Stock.objects.all()
+
     if date_form.is_valid():
         start_date = str(request.POST['start_date']).replace("-", "")
         end_date = str(request.POST['end_date']).replace("-", "")
@@ -168,14 +169,19 @@ def sync(request):
     stock_price = StockPrice.objects.all().filter(stock__in=stock).filter(date=filter_date)
     stock_price2 = StockPrice.objects.all().filter(stock__in=stock).filter(date=filter_date).values()
 
-    df = pd.DataFrame(stock_price)
-    df2 = pd.DataFrame(stock_price2)
-    df2['name'] = df
-    df2 = df2[['name', 'date', 'close']]
+    try:
+        df = pd.DataFrame(stock_price)
+        df2 = pd.DataFrame(stock_price2)
+        df2['name'] = df
+        df2 = df2[['name', 'date', 'close']]
+        dfh = df2.to_html()
+    except ValueError:
+        dfh = None
+        messages.warning(request, 'First you have to have some data')
     context = {'date_form': date_form,
                'filter_form': filter_form,
                'stock': stock,
-               'df2': df2.to_html()}
+               'df2': dfh}
     return render(request, 'account/historical_price_update.html', context)
 
 
