@@ -31,7 +31,7 @@ l2 = [5, 2, 19]
 # date = models.DateField()
 
 
-class Fifo():
+class Fifo:
     def __init__(self, buy_list, sell_list):
         self.buy_lst = buy_list
         self.sell_lst = sell_list
@@ -56,7 +56,6 @@ class Fifo():
             if cumulative < total_sell:
                 self.pnl_realized += x[1]
                 self.closed_position += x[0]
-                print(x)
                 continue
             else:
                 remaining = cumulative - total_sell

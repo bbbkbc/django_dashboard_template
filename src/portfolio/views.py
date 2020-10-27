@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from app.models import StockPrice, TradeHistory, Stock, Profile
-from .models import Pnl
+from .models import Pnl, Fifo
 from .forms import DateForm
 from datetime import timedelta, datetime
 import pandas as pd
@@ -42,7 +42,7 @@ def pnl(request):
                     sell_trades.append(trade)
 
             # unrealized pnl
-            if len(sell_trades) == 0:
+            # if len(sell_trades) == 0:
                 # if Pnl.objects.filter(stock=stock_name).exists():
                 #     print('pnl for', stock_name, 'exist')
                 #
@@ -90,55 +90,69 @@ def pnl(request):
                 #         pnl_unrealized.save()
                 pass
 
-            elif len(sell_trades) != 0:
-                trade_lst = []
-                # unpack queries
-                for buy_trade in buy_trades:
-                    trade_lst.append(
-                        [buy_trade.date_time.date(),
-                         buy_trade.stock_price,
-                         buy_trade.num_of_share,
-                         'buy'])
-                for sell_trade in sell_trades:
-                    trade_lst.append(
-                        [sell_trade.date_time.date(),
-                         sell_trade.stock_price,
-                         sell_trade.num_of_share,
-                         'sell'])
-                deals = pd.DataFrame(data=trade_lst[:], columns=['date', 'price', 'quantity', 'side'])
-                deals['deal_id'] = deals.index
-                mtm_lst = []
-                for trade in deals.itertuples():
-                    trade_date = trade.date
-                    days_number = int((end_date - trade_date).days)
-                    for n in range(days_number):
-                        try:
-                            date = trade_date + timedelta(n)
+            # elif len(sell_trades) != 0:
+            trades = []
+            # unpack queries
+            for buy_trade in buy_trades:
+                trades.append(
+                    [buy_trade.date_time.date(),
+                     buy_trade.stock_price,
+                     buy_trade.num_of_share,
+                     'buy'])
+            for sell_trade in sell_trades:
+                trades.append(
+                    [sell_trade.date_time.date(),
+                     sell_trade.stock_price,
+                     sell_trade.num_of_share,
+                     'sell'])
 
-                            price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=date)
+            deals = pd.DataFrame(data=trades[:], columns=['date', 'price', 'quantity', 'side'])
+            deals['deal_id'] = deals.index
+            mtm_lst = []
+            for trade in deals.itertuples():
+                trade_date = trade.date
+                days_number = int((end_date - trade_date).days)
+                for n in range(days_number):
+                    try:
+                        date = trade_date + timedelta(n)
 
-                            price = trade.price
-                            quantity = trade.quantity
-                            mkt_price = price_history[0].close
-                            mtm = (mkt_price - price) * quantity
-                            trade_id = trade.deal_id
-                            side = trade.side
-                            mtm_lst.append([date, price, quantity, mkt_price, mtm, trade_id, side])
-                        except IndexError:
-                            continue
-                    deals_mtm = pd.DataFrame(mtm_lst, columns=[
-                        'date',
-                        'price',
-                        'quantity',
-                        'mkt_price',
-                        'mtm',
-                        'trade_id',
-                        'side'])
+                        price_history = StockPrice.objects.all().filter(stock=stock_name).filter(date=date)
 
-                    deals_mtm = deals_mtm.sort_values('trade_id')
-                    into_fifo = deals_mtm.groupby(deals_mtm['date']).get_group('date')
-                    for i in into_fifo.itertuples():
-                        print(i)
+                        price = trade.price
+                        quantity = trade.quantity
+                        mkt_price = price_history[0].close
+                        mtm = (mkt_price - price) * quantity
+                        trade_id = trade.deal_id
+                        side = trade.side
+                        mtm_lst.append([date, price, quantity, mkt_price, mtm, trade_id, side])
+                    except IndexError:
+                        continue
+                deals_mtm = pd.DataFrame(mtm_lst, columns=[
+                    'date',
+                    'price',
+                    'quantity',
+                    'mkt_price',
+                    'mtm',
+                    'trade_id',
+                    'side'])
+                deals_mtm = deals_mtm.sort_values(['date', 'trade_id'])
+                deals_mtm = deals_mtm.groupby(deals_mtm['date'])
 
+                print(stock_name)
+                for deal in deals_mtm:
+                    buy_lst = []
+                    sell_lst = []
+                    for d in deal[1].itertuples():
+                        eval_date = d.date
+                        mkt_price = d.mkt_price
+                        if d.side == 'buy':
+                            buy_lst.append([d.quantity, d.mtm])
+                        elif d.side == 'sell':
+                            sell_lst.append([d.quantity, d.mtm])
+                    print(user_id, stock_name, eval_date,  mkt_price, Fifo(buy_lst, sell_lst).run())
+                    buy_lst.clear()
+                    sell_lst.clear()
+                    print('##############')
+                print('@@@@@@@@@@@@@@')
     context = {'date_form': date_form}
     return render(request, 'account/pnl.html', context)

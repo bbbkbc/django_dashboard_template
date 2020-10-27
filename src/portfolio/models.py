@@ -19,6 +19,7 @@ class Pnl(models.Model):
 
 class Fifo:
     def __init__(self, buy_list, sell_list):
+        # nested lst [[quantity, mtm]]
         self.buy_lst = buy_list
         self.sell_lst = sell_list
 
@@ -35,14 +36,12 @@ class Fifo:
         total_sell_pnl = sum(mtm_sell[1] for mtm_sell in self.sell_lst if mtm_sell[1])
         self.pnl_realized -= total_sell_pnl
         cumulative = 0
-        ret = []
 
         for (n, x) in enumerate(self.buy_lst):
             cumulative += x[0]
             if cumulative < total_sell:
                 self.pnl_realized += x[1]
                 self.closed_position += x[0]
-                print(x)
                 continue
             else:
                 remaining = cumulative - total_sell
@@ -53,7 +52,6 @@ class Fifo:
                 self.pnl_unrealized += open_pnl
                 self.closed_position += closed_pos
                 self.open_position += remaining
-                print()
                 for open_items in self.buy_lst[n+1:]:
                     self.pnl_unrealized += open_items[1]
                     self.open_position += open_items[0]
