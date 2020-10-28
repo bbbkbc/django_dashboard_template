@@ -5,7 +5,7 @@ from app.models import Stock, Profile
 class Pnl(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL)
-    stock = models.ForeignKey(Stock, null=True, on_delete=models.SET_NULL, unique_for_date=True)
+    stock = models.ForeignKey(Stock, null=True, on_delete=models.SET_NULL)
     date = models.DateField(null=True)
     mkt_price = models.FloatField(null=True)
     pnl_unrealized = models.FloatField(null=True)

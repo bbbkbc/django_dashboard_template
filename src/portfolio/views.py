@@ -22,7 +22,19 @@ def pnl(request):
         eval_date = request.POST['evaluation_date']
         end_date = datetime.strptime(eval_date, '%Y-%m-%d').date()
         stock_base = Stock.objects.all()
+        update_date = None
         for stock_name in stock_base:
+
+            pnl_item = Pnl.objects.filter(stock=stock_name).exists()
+            if pnl_item:
+                print('there is pnl for:', stock_name)
+                last_item = Pnl.objects.filter(stock=stock_name).order_by('-date')[0].date
+                if last_item >= end_date:
+                    print('database updated')
+                    continue
+                else:
+                    update_date = last_item
+
             trade_history = TradeHistory.objects.all().filter(
                 date_time__lte=eval_date).order_by(
                 'date_time').filter(stock=stock_name)
@@ -53,7 +65,10 @@ def pnl(request):
             mtm_lst = []
 
             for trade in deals.itertuples():
-                trade_date = trade.date
+                if update_date is not None:
+                    trade_date = update_date
+                else:
+                    trade_date = trade.date
                 days_number = int((end_date - trade_date).days)
                 for n in range(days_number):
                     try:
@@ -92,7 +107,12 @@ def pnl(request):
                     elif d.side == 'sell':
                         sell_lst.append([d.quantity, d.mtm])
                 fifo = Fifo(buy_lst, sell_lst).run()
-                print(user_id, stock_name, eval_date,  mkt_price, fifo)
+                print(user_id, stock_name, eval_date, mkt_price, fifo)
+                check_existence = Pnl.objects.filter(stock=stock_name, date=eval_date).exists()
+                if check_existence:
+                    print('this record exist')
+                    continue
+
                 pnl_model = Pnl(
                     user=user_id,
                     stock=stock_name,
@@ -105,7 +125,7 @@ def pnl(request):
                 pnl_model.save()
                 buy_lst.clear()
                 sell_lst.clear()
-                print('##############')
+                print('________________________')
 
     context = {'date_form': date_form}
     return render(request, 'account/pnl.html', context)
